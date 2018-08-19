@@ -40,10 +40,6 @@ self.addEventListener('fetch', event => {
 			event.respondWith(caches.match('/index.html'));
 			return;
 		}
-		if(requestUrl.pathname.startsWith('/img/')){
-			event.respondWith(servePhoto(event.request));
-			return;
-		}
 	}
 	event.respondWith(
 		caches.match(event.request).then(response => {
@@ -51,62 +47,3 @@ self.addEventListener('fetch', event => {
 		})
 	);
 });
-
-const servePhoto = request => {
-	let storageUrl = request.url.replace(/[0-9]\.jpg$/, '');
-	return caches.open(imgsCache).then(cache => {
-		return cache.match(storageUrl).then(response => {
-			if(response) return response;
-
-			return fetch(request).then(networkResponse => {
-				cache.put(storageUrl, networkResponse.clone());
-				return networkResponse;
-			});
-		});
-	});
-} 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*//Functions
-function fetchFromNetworkAndCache(e) {
-  if (e.request.cache === 'only-if-cached' && e.request.mode !== 'same-origin') return;
-  return fetch(e.request).then(res => {
-    // Foreign requests may be res.type === 'opaque' and missing a url
-    if (!res.url) return res;
-    // Regardless, don't cache other origin's assets
-    if (new URL(res.url).origin !== location.origin) return res;
-    return caches.open(staticCacheName).then(cache => {
-      // TODO: figure out if the content is new and therefore the page needs a reload.
-      cache.put(e.request, res.clone());
-      return res;
-    });
-  }).catch(err => console.error(e.request.url, err));
-}
-
-function handleNoCacheMatch(e) {
-  return fetchFromNetworkAndCache(e);
-}*/
