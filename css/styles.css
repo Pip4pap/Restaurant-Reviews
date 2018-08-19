@@ -219,8 +219,8 @@ nav h1 a {
 }
 .inside #footer {
   bottom: 0;
-  position: static;
-  width: 100%;
+  position: inherit;
+  width: initial;
 }
 #restaurant-name {
   color: #f18200;
@@ -282,7 +282,7 @@ nav h1 a {
   width: 85%;
 }
 #reviews-list li p {
-  margin: 0 0 10px;
+  font-size: 12pt;
 }
 #restaurant-hours{
   border-color: inherit;
@@ -365,8 +365,13 @@ nav h1 a {
   .inside #col-left{
     display: block;
     width: 100%;
-    order: 1; 
+    order: 1;
   }
+  .inside footer{
+    position: fixed;
+    width: initial;
+  }
+  .inside 
 }
 
 /* Big laptops and desktops */
