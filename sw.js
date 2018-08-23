@@ -15,7 +15,7 @@ self.addEventListener('install', event => {
 				'/js/dbhelper.js',
 				'/js/main.js',
 				'/js/restaurant_info.js',
-				'restaurant.html'
+				'/restaurant.html'
 			]);
 		})
 	);
@@ -35,11 +35,9 @@ self.addEventListener('activate', event => {
 //Respond with assets in case of request
 self.addEventListener('fetch', event => {
 	let requestUrl = new URL(event.request.url);
-	if(requestUrl.origin === location.origin){
-		if(requestUrl.pathname === '/'){
-			event.respondWith(caches.match('/index.html'));
-			return;
-		}
+	if((requestUrl.origin === location.origin) && (requestUrl.pathname === '/')){
+		event.respondWith(caches.match('/index.html'));
+		return;
 	}
 	event.respondWith(
 		caches.match(event.request).then(response => {
