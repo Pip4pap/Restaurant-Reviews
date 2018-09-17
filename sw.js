@@ -8,14 +8,14 @@ self.addEventListener('install', event => {
 	event.waitUntil(
 		caches.open(staticCacheName).then(cache => {
 			return cache.addAll([
-				'/',
-				'/index.html',
-				'/css/styles.css',
-				'/data/restaurants.json',
-				'/js/dbhelper.js',
-				'/js/main.js',
-				'/js/restaurant_info.js',
-				'/restaurant.html'
+				'./',
+				'./index.html',
+				'./css/styles.css',
+				'./data/restaurants.json',
+				'./js/dbhelper.js',
+				'./js/main.js',
+				'./js/restaurant_info.js',
+				'./restaurant.html'
 			]);
 		})
 	);
