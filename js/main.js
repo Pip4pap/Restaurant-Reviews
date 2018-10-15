@@ -13,6 +13,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
   fetchCuisines();
 });
 
+//Pull data from server
+fetch('http://localhost:1337/restaurants')
+  .then(handleErrors)
+  //.then(response => {return response.json();})
+  .then(data => {console.log(data);})
+  .catch(error => {console.log(error);});
+
 /**
  * Fetch all neighborhoods and set their HTML.
  */
@@ -88,19 +95,6 @@ initMap = () => {
 
   updateRestaurants();
 }
-/* window.initMap = () => {
-  let loc = {
-    lat: 40.722216,
-    lng: -73.987501
-  };
-  self.map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12,
-    center: loc,
-    scrollwheel: false
-  });
-  updateRestaurants();
-} */
-
 /**
  * Update page and map for current restaurants.
  */
@@ -199,4 +193,19 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     self.markers.push(marker);
   });
 
-} 
+}
+
+//Generic error handling function
+const handleErrors = response => {
+  if(!response.ok){
+    throw Error(response.statusText);
+  }
+  return response;
+}
+
+const db = idb.open('images', 1, upgradeDB => {
+  switch(upgradeDB.oldVersion){
+    case 0:
+      let imageStore = upgradeDB.createObjectStore('images', {keyPath:''});
+  }
+});
