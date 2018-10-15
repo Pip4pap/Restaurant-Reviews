@@ -1,5 +1,6 @@
 //Cache names
 const staticCacheName = 'reviewAppCache';
+const dynamicCacheName = 'reviewAppDynamic'
 const imgsCache = 'reviewAppImgsCache';
 const allCaches = [staticCacheName, imgsCache];
 
@@ -40,8 +41,13 @@ self.addEventListener('fetch', event => {
 		return;
 	}
 	event.respondWith(
-		caches.match(event.request).then(response => {
-			return response || fetch(event.request);
+		caches.match(event.request).then(cacheResponse => {
+			return cacheResponse || fetch(event.request).then(networkResponse => {
+				return caches.open(dynamicCacheName).then(cache => {
+					cache.put(event.request, networkResponse.clone());
+					return networkResponse;
+				});
+			});
 		})
 	);
 });
