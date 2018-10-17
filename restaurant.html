@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="theme-color" content="#fcb41a">
   <meta author="Musumba Phillip Mulindwa">
   <meta name="Restaurant Reviews" description="Restaurant Reviews is an application that collects feedback from customers of restaurants across Manhattan, USA.">
   <link rel="icon" href="img/faivicon.png">
@@ -34,7 +35,7 @@
   </header>
   <!-- End header -->
   <!-- Beginning main -->
-  <main id="maincontent">
+  <main id="maincontent" role="main">
     <div id="col-left"> 
     <!-- Beginning restaurant -->
       <section id="restaurant-container">
@@ -61,12 +62,22 @@
   <!-- End main -->
 
   <!-- Beginning footer -->
-  <footer id="footer">
+  <footer id="footer" role="contentinfo">
     Copyright (c) 2017 <a href="/"><strong>Restaurant Reviews</strong></a> All Rights Reserved.
   </footer>
   <!-- End footer -->
   <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
   <!-- Beginning scripts -->
+  <!--Service Worker-->
+  <script>
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then(() => {
+          console.log('Service Worker registered!@#');
+        });
+    }
+  </script>
   <!-- Database helpers -->
   <script src="js/dbhelper.js"></script>
   <!-- Main javascript file -->

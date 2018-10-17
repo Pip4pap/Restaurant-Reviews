@@ -16,14 +16,14 @@
   </head>
 
   <body id="outer">
-    <header>
+    <header role="banner">
       <nav>
         <h1><a href="index.html">Restaurant 
         Reviews</a></h1>
       </nav>
     </header>
 
-    <main id="maincontent">
+    <main id="maincontent" role="main">
       <section id="map-container">
         <div tabindex="0" id="map" role="application" aria-label="Map with restaurant"></div>
       </section>
@@ -37,7 +37,7 @@
             <option value="all">All Cuisines</option>
           </select>
         </div>
-        <ul id="restaurants-list"></ul>
+        <ul role="region" aria-label="restaurants list" id="restaurants-list"></ul>
       </section>
     </main>
     <!-- Begin footer -->
@@ -46,7 +46,7 @@
     </footer>
     <!-- End footer -->
     <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
-    <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
+    <script charset="utf-8" src="js/dbhelper.js"></script>
     <script>
       if('serviceWorker' in navigator){
         navigator.serviceWorker
@@ -56,7 +56,7 @@
           });
       }
     </script>
-    <script type="application/javascript" charset="utf-8" src="js/main.js"></script>
+    <script charset="utf-8" src="js/main.js"></script>
   </body>
 
 </html>
