@@ -15,8 +15,11 @@ class DBHelper {
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    fetch(`${DBHelper.DATABASE_URL}`)
+    fetch(DBHelper.DATABASE_URL)
       .then(res => {
+        if(!response.ok){
+          throw Error('Request failed!!!');
+        }
         return res.json();
       })
       .then(data => callback(null, data))
