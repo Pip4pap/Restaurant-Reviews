@@ -1,4 +1,4 @@
-import idb from "idb"
+import idb from idb
 //Cache names
 const staticCacheName = 'reviewAppCache';
 const dynamicCacheName = 'reviewAppDynamic'
