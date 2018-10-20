@@ -1,0 +1,57 @@
+{
+	"name": "Udacity Restaurant Reviews for MWS ND",
+  	"short_name": "Restaurants",
+  	"theme_color": "#fcb41a",
+  	"background_color": "#262932",
+  	"display": "standalone",
+  	"Scope": "/",
+  	"start_url": "/index.html",
+  	"icons": [
+  	    {
+  	      "sizes": "16x16",
+  	      "src": "img/icon/review16.png",
+  	      "type": "image/png"
+  	    },
+  	    {
+  	      "src": "img/icon/review20.png",
+  	      "sizes": "20x20",
+  	      "type": "image/png"
+  	    },
+  	    {
+  	      "src": "img/icon/review24.png",
+  	      "sizes": "24x24",
+  	      "type": "image/png"
+  	    },
+  	    {
+  	      "src": "img/icon/review32.png",
+  	      "sizes": "32x32",
+  	      "type": "image/png"
+  	    },
+  	    {
+  	      "src": "img/icon/review48.png",
+  	      "sizes": "48x48",
+  	      "type": "image/png"
+  	    },
+  	    {
+  	      "src": "img/icon/review64.png",
+  	      "sizes": "64x64",
+  	      "type": "image/png"
+  	    },
+  	    {
+  	      "src": "img/icon/review128.png",
+  	      "sizes": "128x128",
+  	      "type": "image/png"
+  	    },
+  	    {
+  	      "src": "img/icon/review256.png",
+  	      "sizes": "256x256",
+  	      "type": "image/png"
+  	    },
+  	    {
+  	      "src": "img/icon/review512.png",
+  	      "sizes": "512x512",
+  	      "type": "image/png"
+  	    }
+  	  ],
+  	  "splash_pages": null
+}
