@@ -195,10 +195,3 @@ const handleErrors = response => {
   }
   return response;
 }
-
-const db = idb.open('images', 1, upgradeDB => {
-  switch(upgradeDB.oldVersion){
-    case 0:
-      let imageStore = upgradeDB.createObjectStore('images', {keyPath:''});
-  }
-});

@@ -2,8 +2,8 @@ const gulp = require('gulp');
 const replace = require('gulp-string-replace');
 const del = require('del');
 const fs = require('fs');
-const browserSync = require('browser-sync').create();
-
+/*const browserSync = require('browser-sync').create();
+*/
 //Paths for the folder structure
 let paths = {
 	//Source files
@@ -28,10 +28,10 @@ gulp.task('default', ['copy', 'js']);
 
 //Serve and watch
 gulp.task('serve', () => {
-	browserSync.init({
+	/*browserSync.init({
 		server: paths.tmp,
-		port: 8000
-	});
+		port: 1337
+	});*/
 
 	gulp.watch(paths.srcJS, ['js-watch']);
 });
@@ -39,11 +39,11 @@ gulp.task('serve', () => {
 //Build, serve and watch
 gulp.task('serve:build', ['copy', 'js', 'serve']);
 
-//Finish task before browser is reloaded
+/*//Finish task before browser is reloaded
 gulp.task('js-watch', ['js'], done => {
 	browserSync.reload();
 	done();
-});
+});*/
 
 //Clean output dir
 gulp.task('clean', () => {
