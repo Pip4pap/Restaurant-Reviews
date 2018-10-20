@@ -1,34 +1,10 @@
-import idb from idb
+importScripts('/js/idb.js');
+
 //Cache names
 const staticCacheName = 'reviewAppCache';
 const dynamicCacheName = 'reviewAppDynamic'
 const imgsCache = 'reviewAppImgsCache';
 const allCaches = [staticCacheName, imgsCache];
-
-const dbPromise = idb.open('restaurantDB', 1, upgradeDB => {
-	switch(upgradeDB.oldVersion){
-		case 0:
-			upgradeDB.createObjectStore('restaurants');
-	}
-});
-
-const idbKeyVal = {
-	get(key){
-		return dbPromise.then(db => {
-			return db
-				.transaction('restaurants')
-				.objectStore('restaurants')
-				.get(key);
-		});
-	},
-	set(key, val){
-		return dbPromise.then(db => {
-			const tx = db.transaction('restaurants', 'readwrite');
-			tx.objectStore('restaurants').put(val, key);
-			return tx.complete;
-		});
-	}
-};
 
 //Cache assets immediately the page loads
 self.addEventListener('install', event => {
@@ -65,8 +41,42 @@ self.addEventListener('activate', event => {
 		}).map(cacheName => {
 			return caches['delete'](cacheName);
 		}));
-	}));
+	})); 
 });
+
+//Populate IDB with restaurant json
+/******************Create Indexed DB******************/
+const dbPromise = idb.open('restaurantDB', 1, upgradeDB => {
+  switch(upgradeDB.oldVersion){
+    case 0:
+      upgradeDB.createObjectStore('restaurants');
+  }
+});
+
+const idbKeyVal = {
+  get(key){
+    return dbPromise.then(db => {
+      return db
+        .transaction('restaurants')
+        .objectStore('restaurants')
+        .get(key);
+    });
+  },
+  set(key, val){
+    return dbPromise.then(db => {
+      const tx = db.transaction('restaurants', 'readwrite');
+      tx.objectStore('restaurants').put(val, key);
+      return tx.complete;
+    });
+  }
+};
+
+fetch('http://localhost:1337/restaurants')
+	.then(response => response.json())
+	.then(json => {
+	  idbKeyVal.set('restaurants', json);
+	  return json;
+	});
 
 //Respond with assets in case of request
 self.addEventListener('fetch', event => {
@@ -75,53 +85,49 @@ self.addEventListener('fetch', event => {
 		event.respondWith(caches.match('/index.html'));
 		return;
 	}
-	event.respondWith(
-		caches.match(event.request).then(cacheResponse => {
-			return cacheResponse || fetch(event.request).then(networkResponse => {
-				return caches.open(dynamicCacheName).then(cache => {
-					cache.put(event.request, networkResponse.clone());
-					return networkResponse;
+	if(requestUrl.port === '1337'){
+		if(event.request.method !== 'GET'){
+			console.log('Filtering out non-GET method');
+			return;
+		}
+		event.respondWith(idbResponse(event.request));
+	}
+	else{
+		event.respondWith(
+			caches.match(event.request).then(cacheResponse => {
+				return cacheResponse || fetch(event.request).then(networkResponse => {
+					return caches.open(dynamicCacheName).then(cache => {
+						cache.put(event.request, networkResponse.clone());
+						return networkResponse;
+					});
 				});
-			});
-		})
-	);
+			})
+		);
+	}
+	
 });
 
-//Check IDB and return response, if not found, clone, save and respond
-const fetchFromIDB = request => {
-	return idbKeyVal.get('restaurants').then(restaurants => {
-		return(restaurants || fetch(request)
-								.then(response => response.json())
-								.then(json => {
-									idbKeyVal.set('restaurants', json);
-									return json;
-								})
-		);
-	})
-	.then(response => new Response(JSON.stringify(response)))
-	.catch(error => {
-		return new Response(error, {
-			status: 404,
-			statusText: 'Bad request made'
-		});
-	});
+// //Respond with IDB json
+const idbResponse = request => {
+	if(navigator.onLine){
+		return idbKeyVal.get('restaurants')
+		.then(restaurants => {
+			if(restaurants.length){ //If IDB is populated with restaurants, return them
+				return restaurants;
+			}
+			return fetch('http://localhost:1337/restaurants')	//Else, fetch from network, store and respond
+			.then(response => response.json())
+			.then(json => {
+				idbKeyVal.set('restaurants', json);
+				return json;
+			})
+		})
+		.then(response => new Response(JSON.stringify(response)))
+		.catch(error => console.log('Bad request made'));
+	} else {
+		return idbKeyVal.get('restaurants')
+		/*.then(return (restaurants))*/
+		.then(response => new Response(JSON.stringify(response)))
+		.catch(error => console.log('Bad request made'));
+	}
 }
- const cacheResponse = request => {
- 	return caches.match(request).then(response => {
- 		return response || fetch(request).then(fetchResponse => {
- 			return caches.open(staticCacheName).then(cache => {
- 				cache.put(request, fetchResponse.clone());
- 				return fetchResponse;
- 			});
- 		});
- 	}).catch(error => {
- 		if(request.url.includes('.jpg')){
- 			return caches.match('/img/fixed/offline_img1.png');
- 		}
- 		//For no internet connection
- 		return new Response(error, {
- 			status: 404,
- 			statusText: 'You have no connection to the internet'
- 		});
- 	});
- }

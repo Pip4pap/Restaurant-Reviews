@@ -1,4 +1,5 @@
-/**
+
+ /**
  * Common database helper functions.
  */
 class DBHelper {
@@ -8,18 +9,16 @@ class DBHelper {
    * Change this to restaurants.json file location on your server.
    */
   static get DATABASE_URL() {
-    return `http://localhost:1337/restaurants`;
+    return 'http://localhost:1337/restaurants';
   }
 
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    fetch(DBHelper.DATABASE_URL)
+    
+    fetch('http://localhost:1337/restaurants')
       .then(res => {
-        if(!response.ok){
-          throw Error('Request failed!!!');
-        }
         return res.json();
       })
       .then(data => callback(null, data))
