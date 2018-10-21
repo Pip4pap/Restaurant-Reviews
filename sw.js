@@ -86,10 +86,10 @@ self.addEventListener('fetch', event => {
 		return;
 	}
 	if(requestUrl.port === '1337'){
-		if(event.request.method !== 'GET'){
+		/*if(event.request.method !== 'GET'){
 			console.log('Filtering out non-GET method');
 			return;
-		}
+		}*/
 		event.respondWith(idbResponse(event.request));
 	}
 	else{
