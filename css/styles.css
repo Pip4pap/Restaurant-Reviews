@@ -22,9 +22,10 @@ ul, li {
 a {
 	color: orange;
 	text-decoration: none;
+  font-family: ;
 }
 a:hover, a:focus {
-	color: #3397db;
+	color: #000000;
 	text-decoration: none;
 }
 a img{
@@ -196,13 +197,16 @@ nav h1 a {
   text-decoration: none;
   text-transform: uppercase;
 }
-#restaurants-list li span{
+.favIcon{
   font-size: 22px;
   color: #c8c8c8;
   margin-left: 40px;
   font-weight: 600;
+  background-color: Transparent;
+  background-repeat:no-repeat;
+  border: none;
  }
-#restaurants-list li span:hover{
+.clickedIcon{
   color: #601313;
   cursor: default;
 }

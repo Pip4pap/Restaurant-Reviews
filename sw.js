@@ -1,5 +1,3 @@
-importScripts('/js/idb.js');
-
 //Cache names
 const staticCacheName = 'reviewAppCache';
 const dynamicCacheName = 'reviewAppDynamic'
@@ -44,40 +42,6 @@ self.addEventListener('activate', event => {
 	})); 
 });
 
-//Populate IDB with restaurant json
-/******************Create Indexed DB******************/
-const dbPromise = idb.open('restaurantDB', 1, upgradeDB => {
-  switch(upgradeDB.oldVersion){
-    case 0:
-      upgradeDB.createObjectStore('restaurants', {autoIncrement:true});
-    case 1:
-      const offlineFavorites = upgradeDB.createObjectStore('offline-favorites', {
-      	keyPath: 'id'
-      });
-  }
-});
-const openIDB = () => {
-	if(!'serviceWorker' in navigator){
-		return Promise.resolve();
-	}
-	return dbPromise;
-}
-
-/*****************************************************************/
-
-fetch('http://localhost:1337/restaurants')
-	.then(response => response.json())
-	.then(json => {
-	  json.forEach(element => {
-	  	return dbPromise.then(db => {
-	  	  const tx = db.transaction('restaurants', 'readwrite').objectStore('restaurants');
-	  	  tx.put(element);
-	  	});
-	  });
-/*	  return tx.complete;
-*/	  return json;
-	});
-
 //Respond with assets in case of request
 self.addEventListener('fetch', event => {
 	let requestUrl = new URL(event.request.url);
@@ -86,10 +50,6 @@ self.addEventListener('fetch', event => {
 		return;
 	}
 	if(requestUrl.port === '1337'){
-		/*if(event.request.method !== 'GET'){
-			console.log('Filtering out non-GET method');
-			return;
-		}*/
 		event.respondWith(idbResponse(event.request));
 	}
 	else{

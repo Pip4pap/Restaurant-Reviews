@@ -1,5 +1,4 @@
-
- /**
+  /**
  * Common database helper functions.
  */
 class DBHelper {
@@ -12,17 +11,57 @@ class DBHelper {
     return 'http://localhost:1337/restaurants';
   }
 
+  //Populate IDB with restaurant json
+  /******************Create Indexed DB******************/
+  static openIDB() {
+    if(!'serviceWorker' in navigator){
+      return Promise.resolve();
+    }
+    const dbPromise = idb.open('restaurantDB', 1, upgradeDB => {
+      switch(upgradeDB.oldVersion){
+        case 0:
+          const restaurants = upgradeDB.createObjectStore('restaurants', {
+            keyPath: 'id'
+          });
+        case 1:
+          const offlineFavorites = upgradeDB.createObjectStore('offline-favorites', {
+            keyPath: 'id'
+          });
+      }
+    });
+    return dbPromise;
+  }
+
+
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
+    DBHelper.openIDB().then(db => {
+      const restaurantStore = db.transaction(['restaurants']).objectStore('restaurants');
+      restaurantStore.getAll().then(data => {      
+        if(data.length > 0){
+          callback(null, data);
+        }
+        else{
+          fetch(DBHelper.DATABASE_URL)
+            .then(res => {
+              return res.json();
+            })
+            .then(json => {
+              json.forEach(element => {
+                DBHelper.openIDB().then(db => {
+                  const tx = db.transaction('restaurants', 'readwrite').objectStore('restaurants');
+                  tx.put(element);
+                });
+                callback(null, json);
+              });
+            })
+            .catch(error => callback(`The request failed. Status: ${error.statusText}`, null));
+        }
+      });
+    });
     
-    fetch('http://localhost:1337/restaurants')
-      .then(res => {
-        return res.json();
-      })
-      .then(data => callback(null, data))
-      .catch(error => callback(`The request failed. Status: ${error.statusText}`, null));
   }
 
   /**
@@ -159,6 +198,112 @@ class DBHelper {
       })
       marker.addTo(newMap);
     return marker;
-  } 
-}
+  }
+  /*static improveFavoriteStatus(restaurant){
+    DBHelper.openIDB().then(db => {
+      const store = db.transaction(['restaurants'], 'readwrite')
+      .objectStore('restaurantst');
+      store.put(restaurant);
+    });
+  }*/
 
+  static amendFavorite(restaurant){
+    DBHelper.openIDB().then(db => {
+      let store = db.transaction(['restaurants'], 'readwrite')
+      .objectStore('restaurants');
+      store.put(restaurant);
+    });
+  }
+  static pendingFavorite(id, callback){
+    DBHelper.openIDB().then(db => {
+      const store = db.transaction(['offline-favorites'], 'readwrite')
+      .objectStore('offline-favorites');
+      store.get(id)
+      .then(data => {
+        if(data){
+          store.delete(id);
+          callback(null, data);
+        } else {
+          callback(null, null);
+        }
+      })
+      .catch(error => {
+        callback(error, null);
+      })
+    });
+  }
+  static toggleFavorite(restaurant, callback) {
+    const url = `${DBHelper.DATABASE_URL}/${restaurant.id}/?${restaurant.madeFavorite === 'true' ? 'madeFavorite=false' : 'madeFavorite=true'}`
+    fetch(url, {method: 'PUT'})
+    .then(response => response.json())
+    .then(json => {
+      DBHelper.amendFavorite(json);
+      callback(null, json);
+    })
+    .catch(error => {
+      DBHelper.openIDB().then(db => {
+        const tx = db.transaction(['offline-favorites'], 'readwrite');
+        const store = tx.objectStore('offline-favorites');
+        store.get(restaurant.id).then(data => {
+          if (data) {
+            store.delete(restaurant.id);
+          } else {
+            store.put({
+              id: restaurant.id,
+              favorite: restaurant.madeFavorite === 'true' ? true : false
+            });
+          }
+        });
+      });
+      callback(error, null);
+    });
+  }
+  static favoriteIcon(restaurant){
+    const favorite = document.createElement('button');
+    favorite.classList.add('favIcon');
+    if (restaurant.madeFavorite === 'true') {
+      favorite.innerHTML = '&#x2764;'
+      favorite.setAttribute('aria-label', `Remove ${restaurant.name} from favorite restaurants`);
+      favorite.classList.add('clickedIcon');    
+    } else {
+      favorite.innerHTML = '&#x2764;'
+      favorite.setAttribute('aria-label', `Add ${restaurant.name} to favorite restaurants`);
+      favorite.classList.remove('clickedIcon');
+    }
+
+    DBHelper.pendingFavorite(restaurant.id, (error, favorite) => {
+      if (error) {
+        console.error(error);
+      } else if (favorite){
+        DBHelper.toggleFavorite(favorite, (error, response) => {
+          if (error) {
+            console.error(error);
+          } else {
+            console.log(response);
+          }
+        });
+      }
+    });
+
+    favorite.setAttribute('role', 'button');
+    favorite.addEventListener('click', (event) => {
+      DBHelper.toggleFavorite(restaurant, (error, response) => {
+        if (error) {
+          console.error(error);
+        } else {
+          restaurant.madeFavorite = response.madeFavorite;
+          if (response.madeFavorite === 'true') {
+            favorite.innerHTML = '&#x2764;'
+            favorite.setAttribute('aria-label', `Remove ${restaurant.name} from favorite restaurants`);
+            favorite.classList.add('clickedIcon');    
+          } else {
+            favorite.innerHTML = '&#x2764;'
+            favorite.setAttribute('aria-label', `Add ${restaurant.name} to favorite restaurants`);
+            favorite.classList.remove('clickedIcon');
+          }
+        }
+      });
+    });
+    return favorite;
+  }
+}

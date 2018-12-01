@@ -169,12 +169,7 @@ const createRestaurantHTML = (restaurant) => {
   more.href = DBHelper.urlForRestaurant(restaurant);
   li.append(more);
 
-  const favorite = document.createElement('span');
-  favorite.innerHTML = '&#x2764;'
-  favorite.setAttribute('aria-label', 'Favorite icon');
-  favorite.setAttribute('id', 'fav');
-  favorite.setAttribute('onclick', 'favToggle()');
-  li.append(favorite);
+  li.append(DBHelper.favoriteIcon(restaurant));
 
   return li;
 }
