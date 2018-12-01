@@ -49,33 +49,33 @@ self.addEventListener('activate', event => {
 const dbPromise = idb.open('restaurantDB', 1, upgradeDB => {
   switch(upgradeDB.oldVersion){
     case 0:
-      upgradeDB.createObjectStore('restaurants');
+      upgradeDB.createObjectStore('restaurants', {autoIncrement:true});
+    case 1:
+      const offlineFavorites = upgradeDB.createObjectStore('offline-favorites', {
+      	keyPath: 'id'
+      });
   }
 });
+const openIDB = () => {
+	if(!'serviceWorker' in navigator){
+		return Promise.resolve();
+	}
+	return dbPromise;
+}
 
-const idbKeyVal = {
-  get(key){
-    return dbPromise.then(db => {
-      return db
-        .transaction('restaurants')
-        .objectStore('restaurants')
-        .get(key);
-    });
-  },
-  set(key, val){
-    return dbPromise.then(db => {
-      const tx = db.transaction('restaurants', 'readwrite');
-      tx.objectStore('restaurants').put(val, key);
-      return tx.complete;
-    });
-  }
-};
+/*****************************************************************/
 
 fetch('http://localhost:1337/restaurants')
 	.then(response => response.json())
 	.then(json => {
-	  idbKeyVal.set('restaurants', json);
-	  return json;
+	  json.forEach(element => {
+	  	return dbPromise.then(db => {
+	  	  const tx = db.transaction('restaurants', 'readwrite').objectStore('restaurants');
+	  	  tx.put(element);
+	  	});
+	  });
+/*	  return tx.complete;
+*/	  return json;
 	});
 
 //Respond with assets in case of request
@@ -110,24 +110,29 @@ self.addEventListener('fetch', event => {
 // //Respond with IDB json
 const idbResponse = request => {
 	if(navigator.onLine){
-		return idbKeyVal.get('restaurants')
-		.then(restaurants => {
-			if(restaurants.length){ //If IDB is populated with restaurants, return them
-				return restaurants;
-			}
-			return fetch('http://localhost:1337/restaurants')	//Else, fetch from network, store and respond
-			.then(response => response.json())
-			.then(json => {
-				idbKeyVal.set('restaurants', json);
-				return json;
+		return dbPromise.then(db => {
+			let index = db.transaction('restaurants').objectStore('restaurants');
+			return index.getAll()
+			.then(restaurants => {
+				if(restaurants.length){ //If IDB is populated with restaurants, return them
+					return restaurants;
+				}
+				return fetch('http://localhost:1337/restaurants')	//Else, fetch from network, store and respond
+				.then(response => response.json())
+				.then(json => {
+					idbKeyVal.set('restaurants', json);
+					return json;
+				})
 			})
-		})
-		.then(response => new Response(JSON.stringify(response)))
-		.catch(error => console.log('Bad request made'));
+			.then(response => new Response(JSON.stringify(response)))
+			.catch(error => console.log('Bad request made'));
+		});
 	} else {
-		return idbKeyVal.get('restaurants')
-		/*.then(return (restaurants))*/
-		.then(response => new Response(JSON.stringify(response)))
-		.catch(error => console.log('Bad request made'));
+		return dbPromise.then(db => {
+			let index = db.transaction('restaurants').objectStore('restaurants');
+			return index.getAll()
+			.then(response => new Response(JSON.stringify(response)))
+			.catch(error => console.log('Bad request made'));
+		});
 	}
 }
