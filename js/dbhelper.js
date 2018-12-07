@@ -68,18 +68,32 @@ class DBHelper {
    * Fetch a restaurant by its ID.
    */
   static fetchRestaurantById(id, callback) {
-    // fetch all restaurants with proper error handling.
-    DBHelper.fetchRestaurants((error, restaurants) => {
-      if (error) {
-        callback(error, null);
+   DBHelper.openIDB().then(db => {
+    const restaurantStore = db.transaction(['restaurants']).objectStore('restaurants');
+    restaurantStore.get(parseInt(id)).then(data =>{
+      if (data) {
+        callback(null, data);
       } else {
-        const restaurant = restaurants.find(r => r.id == id);
-        if (restaurant) { // Got the restaurant
-          callback(null, restaurant);
-        } else { // Restaurant does not exist in the database
-          callback('Restaurant does not exist', null);
-        }
+        DBHelper.fetchRestaurantAddToIDB(id, callback);
       }
+    });
+   });
+  }
+
+  static fetchRestaurantAddToIDB(id, callback){
+    fetch(`${DBHelper.DATABASE_URL}/${id}`)
+    .then(res => {
+      return response.json();
+    })
+    .then(json => {
+      DBHelper.openIDB().then(db => {
+        const tx = db.transaction('restaurants', 'readwrite').objectStore('restaurants');
+        tx.put(json);
+      });
+      callback(null, json);
+    })
+    .catch(error => {
+      callback(`The request failed. Status: ${error.statusText}`, null);
     });
   }
 
@@ -199,13 +213,6 @@ class DBHelper {
       marker.addTo(newMap);
     return marker;
   }
-  /*static improveFavoriteStatus(restaurant){
-    DBHelper.openIDB().then(db => {
-      const store = db.transaction(['restaurants'], 'readwrite')
-      .objectStore('restaurantst');
-      store.put(restaurant);
-    });
-  }*/
 
   static amendFavorite(restaurant){
     DBHelper.openIDB().then(db => {
@@ -250,7 +257,7 @@ class DBHelper {
           } else {
             store.put({
               id: restaurant.id,
-              favorite: restaurant.madeFavorite === 'true' ? true : false
+              favorite: (restaurant.madeFavorite === 'true') ? true : false
             });
           }
         });
@@ -266,7 +273,7 @@ class DBHelper {
       favorite.setAttribute('aria-label', `Remove ${restaurant.name} from favorite restaurants`);
       favorite.classList.add('clickedIcon');    
     } else {
-      favorite.innerHTML = '&#x2764;'
+      favorite.innerHTML = '&#x2764';
       favorite.setAttribute('aria-label', `Add ${restaurant.name} to favorite restaurants`);
       favorite.classList.remove('clickedIcon');
     }

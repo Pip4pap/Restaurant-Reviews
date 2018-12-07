@@ -49,50 +49,14 @@ self.addEventListener('fetch', event => {
 		event.respondWith(caches.match('/index.html'));
 		return;
 	}
-	if(requestUrl.port === '1337'){
-		event.respondWith(idbResponse(event.request));
-	}
-	else{
-		event.respondWith(
-			caches.match(event.request).then(cacheResponse => {
-				return cacheResponse || fetch(event.request).then(networkResponse => {
-					return caches.open(dynamicCacheName).then(cache => {
-						cache.put(event.request, networkResponse.clone());
-						return networkResponse;
-					});
+	event.respondWith(
+		caches.match(event.request).then(cacheResponse => {
+			return cacheResponse || fetch(event.request).then(networkResponse => {
+				return caches.open(dynamicCacheName).then(cache => {
+					cache.put(event.request, networkResponse.clone());
+					return networkResponse;
 				});
-			})
-		);
-	}
-	
+			});
+		})
+	);	
 });
-
-// //Respond with IDB json
-const idbResponse = request => {
-	if(navigator.onLine){
-		return dbPromise.then(db => {
-			let index = db.transaction('restaurants').objectStore('restaurants');
-			return index.getAll()
-			.then(restaurants => {
-				if(restaurants.length){ //If IDB is populated with restaurants, return them
-					return restaurants;
-				}
-				return fetch('http://localhost:1337/restaurants')	//Else, fetch from network, store and respond
-				.then(response => response.json())
-				.then(json => {
-					idbKeyVal.set('restaurants', json);
-					return json;
-				})
-			})
-			.then(response => new Response(JSON.stringify(response)))
-			.catch(error => console.log('Bad request made'));
-		});
-	} else {
-		return dbPromise.then(db => {
-			let index = db.transaction('restaurants').objectStore('restaurants');
-			return index.getAll()
-			.then(response => new Response(JSON.stringify(response)))
-			.catch(error => console.log('Bad request made'));
-		});
-	}
-}
