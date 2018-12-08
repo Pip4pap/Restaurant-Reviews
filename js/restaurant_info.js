@@ -54,6 +54,15 @@ const fetchRestaurantFromURL = (callback) => {
         console.error(error);
         return;
       }
+      if(!self.restaurant.reviews){
+        restaurant.reviews = DBHelper.getReviews(self.restaurant.id, (error, reviews) =>{
+          if(!error){
+            self.restaurant.reviews = reviews;
+            removeReviewsHTML();
+            fillReviewsHTML();
+          }
+        });
+      }
       fillRestaurantHTML();
       callback(null, restaurant)
     });
@@ -77,6 +86,12 @@ const fillRestaurantHTML = (restaurant = self.restaurant) => {
    
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
+
+  const FavButton = DBHelper.favoriteIcon(restaurant);
+  FavButton.classList.add('favorite-heart');
+  const primaryFavButton = document.getElementById('favorite-button');
+  primaryFavButton.parentNode.replaceChild(FavButton, primaryFavButton);
+
 
   // fill operating hours
   if (restaurant.operating_hours) {
@@ -115,6 +130,17 @@ const fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   title.innerHTML = 'Reviews';
   container.appendChild(title);
 
+  DBHelper.getPendingReviews((error, reviews) => {
+    reviews.forEach((review) => {
+      DBHelper.postRestaurantReview(review, (error, response) => {
+        if(error){
+          console.log('fillReviewsHTML ' + error);
+        }
+        displayRecentlyWrittenReview(response);
+      });
+    });
+  });
+
   if (!reviews) {
     const noReviews = document.createElement('p');
     noReviews.innerHTML = 'No reviews yet!';
@@ -128,6 +154,11 @@ const fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   container.appendChild(ul);
 }
 
+const removeReviewsHTML = () => {
+  const list = document.getElementById('reviews-list');
+  list.innerHTML = "";
+}
+
 /**
  * Create review HTML and add it to the webpage.
  */
@@ -136,6 +167,20 @@ const createReviewHTML = (review) => {
   const name = document.createElement('p');
   name.innerHTML = review.name;
   li.appendChild(name);
+
+  if(review.createdAt){
+    const date = document.createElement('p');
+    date.innerHTML = `Posted: ${new Date(review.createdAt).toDateString()}`;
+    date.classList.add('review-date');
+    li.appendChild(date);
+  }
+
+  if(review.updatedAt && review.updatedAt !== review.createdAt){
+    const updatedDate = document.createElement('p');
+    updatedDate.innerHTML = `Updated: ${new Date(review.updatedAt).toDateString()}`;
+    date.classList.add('review-date');
+    li.appendChild(date);
+  }
 
   const date = document.createElement('p');
   date.innerHTML = review.date;
@@ -176,4 +221,110 @@ const getParameterByName = (name, url) => {
   if (!results[2])
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+const submitReview = (form) => {
+  const reviewLabel = form.elements.namedItem('review-label');
+  const reviewRating = form.elements.namedItem('review-rating');
+  const reviewComments = form.elements.namedItem('review-comments');
+  const restaurantID = self.restaurant.id;
+
+  if (!(reviewLabel && reviewRating && reviewComments)) {
+    return false;
+  }
+  const reviewDiv = document.getElementById('review-submission');
+  reviewDiv.style.display = 'none';
+  
+  const loader = document.createElement('div');
+  loader.classList.add('loader');
+  loader.id = ('review-loader');
+  document.getElementById('review-submission-container').append(loader);
+
+  const postData = {
+    'restaurant_id': restaurantID,
+    'name': reviewLabel.value,
+    'rating': reviewRating.value,
+    'comments': reviewComments.value
+  }
+
+  DBHelper.postRestaurantReview(postData, (error, response) => {
+    if (error) {
+      hideLoader();
+      displayReviewSubmissionError(error);
+      return false;
+    }
+    hideLoader();
+    displayReviewSubmissionSuccess();
+    displayRecentlySubmittedReview(response);
+  });
+  return false;
+}
+
+const displayConfirmationModal = (options) => {
+
+  const reviewModal = document.createElement('div');
+  reviewModal.classList.add('review-modal');
+  reviewModal.id = 'review-modal';
+// Modal tittle
+  if (options.title) {
+    const modalTitle = document.createElement('h3');
+    modalTitle.innerHTML = options.title;
+    modalTitle.classList.add('review-modal-title');
+    reviewModal.append(modalTitle);
+  }
+// Modal details
+  if (options.details) {
+    const modalDetails = document.createElement('p');
+    modalDetails.innerHTML = options.details;
+    modalDetails.classList.add('review-modal-details');
+    reviewModal.append(modalDetails);
+  }
+  // Modal Ok Button
+  const modalConfirm = document.createElement('button');
+  modalConfirm.innerHTML = 'Ok';
+  modalConfirm.classList.add('review-modal-button');
+  modalConfirm.addEventListener('click', () => {
+    const reviewModal = document.getElementById('review-modal');
+    reviewModal.parentNode.removeChild(reviewModal);
+  });
+  reviewModal.append(modalConfirm);
+
+  // Add it all to review section
+  document.getElementById('review-submission-container').append(reviewModal);
+}
+
+const displayReviewSubmissionSuccess = () => {
+  const modalData = {
+    title: 'Success',
+    details: 'Your review has been submitted successfully.'
+  }
+  displayConfirmationModal(modalData);
+}
+
+const displayReviewSubmissionError = (error) => {
+  const modalData = {
+    title: 'Error',
+    details: 'Your review will be submitted when the internet connection returns'
+  }
+  displayConfirmationModal(modalData);
+}
+
+const displayRecentlySubmittedReview = (reviewData) => {
+  const reviewsList = document.getElementById('reviews-list');
+  const newReview = createReviewHTML(reviewData);
+  newReview.style.backgroundColor = '#FFFFCC';
+  reviewsList.insertBefore(newReview, reviewsList.childNodes[0]);
+}
+
+const hideLoader = () => {
+  const reviewLoader = document.getElementById('review-loader');
+  if(reviewLoader){
+    reviewLoader.parentNode.removeChild(reviewLoader);
+    document.getElementById('review-label').value = '';
+    document.getElementById('review-rating').value = '';
+    document.getElementById('review-comments').value = '';
+    document.getElementById('review-submission').style.display = 'block';
+    return true;
+  }
+  return false;
 }

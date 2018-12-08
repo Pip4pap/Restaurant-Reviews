@@ -10,14 +10,16 @@ class DBHelper {
   static get DATABASE_URL() {
     return 'http://localhost:1337/restaurants';
   }
-
+  static get DATABASE_REVIEWS_URL(){
+    return `http://localhost:1337/reviews`;
+  }
   //Populate IDB with restaurant json
   /******************Create Indexed DB******************/
   static openIDB() {
     if(!'serviceWorker' in navigator){
       return Promise.resolve();
     }
-    const dbPromise = idb.open('restaurantDB', 1, upgradeDB => {
+    return idb.open('restaurantDB', 1, upgradeDB => {
       switch(upgradeDB.oldVersion){
         case 0:
           const restaurants = upgradeDB.createObjectStore('restaurants', {
@@ -27,9 +29,16 @@ class DBHelper {
           const offlineFavorites = upgradeDB.createObjectStore('offline-favorites', {
             keyPath: 'id'
           });
+        case 2:
+          const offlineReviews = upgradeDB.createObjectStore('offline-reviews', {
+            autoIncrement: true
+          });
+        case 3:
+          const reviews = upgradeDB.createObjectStore('reviews', {
+            autoIncrement: true
+          });
       }
     });
-    return dbPromise;
   }
 
 
@@ -186,6 +195,38 @@ class DBHelper {
     });
   }
 
+  static getReviews(id, callback){
+    DBHelper.openIDB().then(db => {
+      const tx = db.transaction(['reviews'], 'readwrite').objectStore('reviews');
+      tx.get(id).then(data => {
+        if(data){
+          callback(null, data);
+          DBHelper.fetchReviewsAddToIDB(id, callback);
+        } else {
+          DBHelper.fetchReviewsAddToIDB(id, callback);
+        }
+      });
+    });
+  }
+
+  static fetchReviewsAddToIDB(id, callback){
+    fetch(DBHelper.DATABASE_REVIEWS_URL + `/?restaurant_id=${id}`)
+    .then(res => {
+      return res.json();
+    })
+    .then(json => {
+      DBHelper.openIDB().then(db => {
+        const tx.transaction(['reviews'], 'readwrite').objectStore('reviews');
+        tx.delete(id);
+        tx.put(json, id);
+      });
+      callback(null, json);
+    })
+    .catch(error => {
+      const error = (`Failed to fetch review from restaurant ${id}`);
+    });
+  }
+
   /**
    * Restaurant page URL.
    */
@@ -212,6 +253,56 @@ class DBHelper {
       })
       marker.addTo(newMap);
     return marker;
+  }
+
+  static postRestaurantReview(postData, callback){
+    const postURL = 'http://localhost:1337/reviews';
+    fetch(postURL, {
+      method: 'POST',
+      body: JSON.stringify(postData),
+      headers : {'Content-Type' : 'application/json'}
+    })
+    .then(res => {
+      return res.json();
+    })
+    .then(json => {
+      callback(null, json);
+      DBHelper.addReviewToDb(json);
+    })
+    .catch(error => {
+      DBHelper.openIDB().then(db => {
+        const tx = db.transaction(['offline-reviews'], 'readwrite').objectStore('offline-reviews');
+        tx.put(postData);
+      });
+      callback(error, null);
+    });
+  }
+
+  static getPendingReviews(callback){
+    DBHelper.openIDB().then(db => {
+      const tx = db.transaction(['offline-reviews'], 'readwrite').objectStore('offline-reviews');
+      tx.getAll().then(data => {
+        if(data.length !== 0){
+          tx.clear().then(() => {
+            callback(null, data);
+          })
+        }
+      })
+    });
+  }
+
+  static addReviewToDb(review){
+    DBHelper.openIDB().then(db => {
+      const tx.transaction(['reviews'], 'readwrite').objectStore('reviews');
+      tx.get(review.restaurant_id).then(data => {
+        let reviews = review;
+        if(data){
+          data.push(review);
+          reviews = data;
+        }
+        tx.put(reviews, review.restaurant_id);
+      });
+    });
   }
 
   static amendFavorite(restaurant){
