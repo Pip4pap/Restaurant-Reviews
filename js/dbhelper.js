@@ -216,14 +216,14 @@ class DBHelper {
     })
     .then(json => {
       DBHelper.openIDB().then(db => {
-        const tx.transaction(['reviews'], 'readwrite').objectStore('reviews');
+        const tx = db.transaction(['reviews'], 'readwrite').objectStore('reviews');
         tx.delete(id);
         tx.put(json, id);
       });
       callback(null, json);
     })
     .catch(error => {
-      const error = (`Failed to fetch review from restaurant ${id}`);
+      callback(`The request failed. Status: ${error.statusText}`, null);
     });
   }
 
@@ -293,7 +293,7 @@ class DBHelper {
 
   static addReviewToDb(review){
     DBHelper.openIDB().then(db => {
-      const tx.transaction(['reviews'], 'readwrite').objectStore('reviews');
+      const tx = db.transaction(['reviews'], 'readwrite').objectStore('reviews');
       tx.get(review.restaurant_id).then(data => {
         let reviews = review;
         if(data){
