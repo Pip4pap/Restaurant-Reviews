@@ -52,13 +52,13 @@
         <div id="favorite-button"></div>
         <div id="review-submission">
           <form id="user-review" onsubmit="return submitReview(this);">
-            <label for="review-label">Name</label>
-            <input type="text" name="review-label" id="review-label">
-            <label for="review-rating">Rating</label>
-            <input type="number" name="review-rating" id="review-rating" min="1" max="5">
-            <label for="review-comments">Comments</label>
-            <textarea name="review-comments" id="review-comments" form="user-review"></textarea>
-            <button>Submit</button>
+            <label for="review-label"></label>
+            <input type="text" name="review-label" id="review-label" placeholder="Name" required> <br/><br/>
+            <label for="review-rating"></label>
+            <input type="number" name="review-rating" id="review-rating" placeholder="Rating" min="1" max="5" required> <br/><br/>
+            <label for="review-comments"></label>
+            <textarea name="review-comments" id="review-comments" placeholder="Comment" form="user-review" required></textarea> <br/><br/>
+            <button id="submitReview">Submit</button>
           </form>
         </div>
       </section>

@@ -209,6 +209,7 @@ nav h1 a {
 .clickedIcon{
   color: #601313;
   cursor: default;
+  outline: none;
 }
 
 /* ====================== Restaurant Details ====================== */
@@ -310,6 +311,50 @@ nav h1 a {
 }
 #restaurant-hours td {
   color: #666;
+}
+#submitReview{
+  border-radius: 3px;
+  background-color: orange;
+  border-bottom: 3px solid #eee;
+  color: #fff;
+  display: inline-block;
+  font-size: 10pt;
+  margin: 15px 0 0;
+  padding: 8px 30px 10px;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+#review-label{
+  height: 20px;
+  border-radius: 5px;
+  border-color: transparent;
+}
+#review-rating{
+  width: 100px;
+  height: 20px;
+  border-radius: 5px;
+  border-color: transparent;
+}
+textarea{
+  width: 400px;
+  height: 100px;
+  border-radius: 5px;
+  border-color: transparent;;
+}
+#col-left .favIcon{
+  font-size: 30px;
+  color: #c8c8c8;
+  font-weight: 600;
+  background-color: Transparent;
+  background-repeat:no-repeat;
+  border: none;
+  margin-right: 40px;
+ }
+#col-left .clickedIcon{
+  color: #601313;
+  cursor: default;
+  outline: none;
 }
 
 
