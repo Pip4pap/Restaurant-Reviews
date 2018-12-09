@@ -326,13 +326,13 @@ nav h1 a {
   text-transform: uppercase;
 }
 #review-label{
-  height: 20px;
+  height: 30px;
   border-radius: 5px;
   border-color: transparent;
 }
 #review-rating{
   width: 100px;
-  height: 20px;
+  height: 30px;
   border-radius: 5px;
   border-color: transparent;
 }
